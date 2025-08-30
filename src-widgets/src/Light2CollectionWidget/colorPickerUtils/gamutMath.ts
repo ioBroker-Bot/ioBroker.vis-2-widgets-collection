@@ -1,4 +1,3 @@
-// Philips Hue Gamut Definitionen
 export const gamutTriangles = {
     A: [
         [0.704, 0.296],
@@ -17,24 +16,20 @@ export const gamutTriangles = {
     ],
 };
 
-// xy -> RGB Umrechnung (Philips Hue Standard)
 export function xyToRgb(x: number, y: number): { r: number; g: number; b: number } {
     const z = 1.0 - x - y;
     const Y = 1.0;
     const X = (Y / y) * x;
     const Z = (Y / y) * z;
 
-    // Wide RGB D65 conversion
     let r = X * 1.656492 - Y * 0.354851 - Z * 0.255038;
     let g = -X * 0.707196 + Y * 1.655397 + Z * 0.036152;
     let b = X * 0.051713 - Y * 0.121364 + Z * 1.01153;
 
-    // Clamp and gamma correct
     r = r <= 0.0031308 ? 12.92 * r : (1.0 + 0.055) * Math.pow(r, 1.0 / 2.4) - 0.055;
     g = g <= 0.0031308 ? 12.92 * g : (1.0 + 0.055) * Math.pow(g, 1.0 / 2.4) - 0.055;
     b = b <= 0.0031308 ? 12.92 * b : (1.0 + 0.055) * Math.pow(b, 1.0 / 2.4) - 0.055;
 
-    // Normalize
     const max = Math.max(r, g, b);
     if (max > 1) {
         r /= max;
@@ -48,7 +43,6 @@ export function xyToRgb(x: number, y: number): { r: number; g: number; b: number
     };
 }
 
-// RGB -> HSV Umrechnung
 export function rgbToHsv(r: number, g: number, b: number): { h: number; s: number; v: number } {
     const max = Math.max(r, g, b),
         min = Math.min(r, g, b);
@@ -78,30 +72,40 @@ export function rgbToHsv(r: number, g: number, b: number): { h: number; s: numbe
     return { h: h * 360, s, v };
 }
 
-// Dreieck korrekt im HS-Kreis des Wheels zeichnen
+export function getGamutTrianglePoints(gamutType: 'A' | 'B' | 'C', size: number): [number, number][] {
+    const triangle = gamutTriangles[gamutType];
+    const center = size / 2;
+    const radius = size / 2;
+    return triangle.map(([x, y]) => {
+        const { r, g, b } = xyToRgb(x, y);
+        const { h, s } = rgbToHsv(r, g, b);
+        const angle = (h - 90) * (Math.PI / 180);
+        return [center + Math.cos(angle) * s * radius, center + Math.sin(angle) * s * radius];
+    });
+}
+
+// Punkt-in-Dreieck-Test (Baryzentrisch)
+export function isPointInTriangle(p: [number, number], tri: [number, number][]): boolean {
+    const [a, b, c] = tri;
+    const area = 0.5 * (-b[1] * c[0] + a[1] * (-b[0] + c[0]) + a[0] * (b[1] - c[1]) + b[0] * c[1]);
+    const s = (1 / (2 * area)) * (a[1] * c[0] - a[0] * c[1] + (c[1] - a[1]) * p[0] + (a[0] - c[0]) * p[1]);
+    const t = (1 / (2 * area)) * (a[0] * b[1] - a[1] * b[0] + (a[1] - b[1]) * p[0] + (b[0] - a[0]) * p[1]);
+    const u = 1 - s - t;
+    return s >= 0 && t >= 0 && u >= 0;
+}
+
 export function drawGamutTriangleOnCanvas(
     canvas: HTMLCanvasElement,
     gamutType: 'A' | 'B' | 'C',
     size: number,
-    fillColor: string,
+    fillColor: string = '#fff176',
 ): void {
     const ctx = canvas.getContext('2d');
     if (!ctx || !gamutTriangles[gamutType]) {
         return;
     }
     ctx.clearRect(0, 0, size, size);
-    const triangle = gamutTriangles[gamutType];
-    const center = size / 2;
-    const radius = size / 2;
-
-    // xy → RGB → HSV → Wheel-Koordinaten
-    const points = triangle.map(([x, y]) => {
-        const { r, g, b } = xyToRgb(x, y);
-        const { h, s } = rgbToHsv(r, g, b);
-        const angle = (h - 90) * (Math.PI / 180); // iro.js: 0° = oben
-        return [center + Math.cos(angle) * s * radius, center + Math.sin(angle) * s * radius];
-    });
-
+    const points = getGamutTrianglePoints(gamutType, size);
     ctx.save();
     ctx.globalAlpha = 0.3;
     ctx.beginPath();

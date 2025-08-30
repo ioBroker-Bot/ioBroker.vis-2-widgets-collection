@@ -30,6 +30,7 @@ interface LightPickerProps {
     cctComponentNumber: number;
     onInputChange?: (color: iro.Color) => void;
     onColorInit?: (color: iro.Color) => void;
+    onGamutPointerDown?: (event: PointerEvent, inside: boolean) => void; // <--- NEU
 }
 
 const Light2Picker: React.FC<LightPickerProps> = ({
@@ -46,6 +47,7 @@ const Light2Picker: React.FC<LightPickerProps> = ({
     cctComponentNumber,
     onInputChange,
     onColorInit,
+    onGamutPointerDown, // <--- NEU
 }) => {
     const { theme } = useContext(CollectionContext);
     const colorPickerRef = useRef<HTMLDivElement>(null);
@@ -158,6 +160,7 @@ const Light2Picker: React.FC<LightPickerProps> = ({
                 colorLightWidth,
                 theme.palette.primary.main,
                 drawGamutTriangleOnCanvas,
+                onGamutPointerDown, // <--- NEU
             );
         }, 0);
 
@@ -169,6 +172,7 @@ const Light2Picker: React.FC<LightPickerProps> = ({
         iroPickerRef.current?.base,
         colorLightWidth,
         theme.palette.primary.main,
+        onGamutPointerDown,
     ]);
 
     return <Box ref={colorPickerRef} />;

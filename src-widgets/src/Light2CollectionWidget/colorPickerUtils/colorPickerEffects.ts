@@ -1,5 +1,6 @@
 // colorPickerUtils/colorPickerEffects.ts
 import iro from '@jaames/iro';
+import { getGamutTrianglePoints, isPointInTriangle, type drawGamutTriangleOnCanvas } from './gamutMath';
 
 export function initializeColorPicker(
     ref: React.RefObject<HTMLDivElement>,
@@ -48,17 +49,13 @@ export function setColorPickerOptions(picker: iro.ColorPicker | null, options: R
 
 export function updateGamutCanvas(
     canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
-    iroPickerRef: React.MutableRefObject<iro.ColorPicker | null>,
+    iroPickerRef: React.MutableRefObject<any>,
     hasValueSlider: boolean,
     colorLightGamut: string | undefined,
     colorLightWidth: number | undefined,
     fillColor: string,
-    drawGamutTriangleOnCanvas: (
-        canvas: HTMLCanvasElement,
-        gamutType: 'A' | 'B' | 'C',
-        size: number,
-        fillColor: string,
-    ) => void,
+    drawTriangle: typeof drawGamutTriangleOnCanvas,
+    pointerHandler?: (event: PointerEvent, inside: boolean) => void,
 ): void {
     // Entferne ggf. altes Canvas
     if (canvasRef.current && canvasRef.current.parentElement) {
@@ -72,10 +69,10 @@ export function updateGamutCanvas(
         colorLightGamut !== 'default' &&
         iroPickerRef.current &&
         iroPickerRef.current.base &&
-        (iroPickerRef.current.base as HTMLElement).children[0] &&
+        iroPickerRef.current.base.children[0] &&
         colorLightWidth
     ) {
-        const wheelElem = (iroPickerRef.current.base as HTMLElement).children[0] as HTMLElement;
+        const wheelElem = iroPickerRef.current.base.children[0] as HTMLElement;
         const size = colorLightWidth;
         const canvas = document.createElement('canvas');
         canvas.width = size;
@@ -83,12 +80,60 @@ export function updateGamutCanvas(
         canvas.style.position = 'absolute';
         canvas.style.left = '0';
         canvas.style.top = '0';
-        canvas.style.pointerEvents = 'none';
+        // canvas.style.pointerEvents = pointerHandler ? 'auto' : 'none';
+        canvas.style.pointerEvents = 'auto';
         canvas.style.zIndex = '10';
-        drawGamutTriangleOnCanvas(canvas, colorLightGamut as 'A' | 'B' | 'C', size, fillColor);
+        drawTriangle(canvas, colorLightGamut as 'A' | 'B' | 'C', size, fillColor);
         wheelElem.style.position = 'relative';
         wheelElem.appendChild(canvas);
         canvasRef.current = canvas;
+
+        const trianglePoints = getGamutTrianglePoints(colorLightGamut as 'A' | 'B' | 'C', size);
+
+        canvas.onpointerdown = (e: PointerEvent) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const inside = isPointInTriangle([x, y], trianglePoints);
+            if (pointerHandler) {
+                pointerHandler(e, inside);
+            }
+            if (!inside) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+
+        canvas.onpointerup = (e: PointerEvent) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const inside = isPointInTriangle([x, y], trianglePoints);
+            if (pointerHandler) {
+                pointerHandler(e, inside);
+            }
+            if (!inside) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+
+        canvas.onpointermove = (e: PointerEvent) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const inside = isPointInTriangle([x, y], trianglePoints);
+
+            console.log('inside:', inside);
+            if (pointerHandler) {
+                pointerHandler(e, inside);
+            }
+            if (!inside) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+        // Optional: pointermove, pointerup analog behandeln
     }
 }
 
