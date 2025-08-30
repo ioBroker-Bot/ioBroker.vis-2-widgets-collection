@@ -45,3 +45,56 @@ export function setColorPickerOptions(picker: iro.ColorPicker | null, options: R
     }
     picker.setOptions(options);
 }
+
+export function updateGamutCanvas(
+    canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
+    iroPickerRef: React.MutableRefObject<iro.ColorPicker | null>,
+    hasValueSlider: boolean,
+    colorLightGamut: string | undefined,
+    colorLightWidth: number | undefined,
+    fillColor: string,
+    drawGamutTriangleOnCanvas: (
+        canvas: HTMLCanvasElement,
+        gamutType: 'A' | 'B' | 'C',
+        size: number,
+        fillColor: string,
+    ) => void,
+): void {
+    // Entferne ggf. altes Canvas
+    if (canvasRef.current && canvasRef.current.parentElement) {
+        canvasRef.current.parentElement.removeChild(canvasRef.current);
+        canvasRef.current = null;
+    }
+
+    if (
+        hasValueSlider &&
+        colorLightGamut &&
+        colorLightGamut !== 'default' &&
+        iroPickerRef.current &&
+        iroPickerRef.current.base &&
+        (iroPickerRef.current.base as HTMLElement).children[0] &&
+        colorLightWidth
+    ) {
+        const wheelElem = (iroPickerRef.current.base as HTMLElement).children[0] as HTMLElement;
+        const size = colorLightWidth;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        canvas.style.position = 'absolute';
+        canvas.style.left = '0';
+        canvas.style.top = '0';
+        canvas.style.pointerEvents = 'none';
+        canvas.style.zIndex = '10';
+        drawGamutTriangleOnCanvas(canvas, colorLightGamut as 'A' | 'B' | 'C', size, fillColor);
+        wheelElem.style.position = 'relative';
+        wheelElem.appendChild(canvas);
+        canvasRef.current = canvas;
+    }
+}
+
+export function cleanupGamutCanvas(canvasRef: React.MutableRefObject<HTMLCanvasElement | null>): void {
+    if (canvasRef.current && canvasRef.current.parentElement) {
+        canvasRef.current.parentElement.removeChild(canvasRef.current);
+        canvasRef.current = null;
+    }
+}
