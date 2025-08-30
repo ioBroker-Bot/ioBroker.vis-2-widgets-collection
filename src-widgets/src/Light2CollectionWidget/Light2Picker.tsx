@@ -97,6 +97,7 @@ const Light2Picker: React.FC<LightPickerProps> = ({
         [colorLightLayout],
     );
 
+    // Color Picker initialisieren
     useEffect(() => {
         initializeColorPicker(
             colorPickerRef,
@@ -117,10 +118,12 @@ const Light2Picker: React.FC<LightPickerProps> = ({
         return () => cleanupColorPicker(iroPickerRef);
     }, []);
 
+    // Color Picker Größe anpassen
     useEffect(() => {
         resizeColorPicker(iroPickerRef.current, colorLightWidth);
     }, [colorLightWidth]);
 
+    // Color Picker Optionen setzen
     useEffect(() => {
         setColorPickerOptions(iroPickerRef.current, {
             layout: colorLightLayout,
