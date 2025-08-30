@@ -168,8 +168,8 @@ const Light2Picker: React.FC<LightPickerProps> = ({
     }, [
         hasValueSlider,
         colorLightGamut,
-        colorLightLayout,
-        iroPickerRef.current?.base,
+        // colorLightLayout,
+        // iroPickerRef.current?.base,
         colorLightWidth,
         theme.palette.primary.main,
         onGamutPointerDown,
