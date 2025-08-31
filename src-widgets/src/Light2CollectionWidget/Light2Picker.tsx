@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type iro from '@jaames/iro';
 import { Box } from '@mui/material';
 import { type ElementDimensions } from '../hooks/useElementDimensions';
@@ -52,6 +52,7 @@ const Light2Picker: React.FC<LightPickerProps> = ({
     const { theme } = useContext(CollectionContext);
     const colorPickerRef = useRef<HTMLDivElement>(null);
     const iroPickerRef = useRef<iro.ColorPicker | null>(null);
+    const lastInsideRef = useRef(true);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     const handleColorInit = useCallback(
@@ -150,11 +151,12 @@ const Light2Picker: React.FC<LightPickerProps> = ({
     ]);
 
     // Canvas direkt in das Wheel-Element einfügen/entfernen
-    useEffect(() => {
+    useLayoutEffect(() => {
         setTimeout(() => {
             updateGamutCanvas(
                 canvasRef,
                 iroPickerRef,
+                lastInsideRef,
                 hasValueSlider,
                 colorLightGamut,
                 colorLightWidth,
@@ -165,15 +167,7 @@ const Light2Picker: React.FC<LightPickerProps> = ({
         }, 0);
 
         return () => cleanupGamutCanvas(canvasRef);
-    }, [
-        hasValueSlider,
-        colorLightGamut,
-        // colorLightLayout,
-        // iroPickerRef.current?.base,
-        colorLightWidth,
-        theme.palette.primary.main,
-        onGamutPointerDown,
-    ]);
+    }, [hasValueSlider, colorLightGamut, colorLightWidth, theme.palette.primary.main, onGamutPointerDown]);
 
     return <Box ref={colorPickerRef} />;
 };

@@ -50,6 +50,7 @@ export function setColorPickerOptions(picker: iro.ColorPicker | null, options: R
 export function updateGamutCanvas(
     canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
     iroPickerRef: React.MutableRefObject<any>,
+    lastInsideRef: React.MutableRefObject<boolean>, // <--- NEU
     hasValueSlider: boolean,
     colorLightGamut: string | undefined,
     colorLightWidth: number | undefined,
@@ -58,10 +59,7 @@ export function updateGamutCanvas(
     pointerHandler?: (event: PointerEvent, inside: boolean) => void,
 ): void {
     // Entferne ggf. altes Canvas
-    if (canvasRef.current && canvasRef.current.parentElement) {
-        canvasRef.current.parentElement.removeChild(canvasRef.current);
-        canvasRef.current = null;
-    }
+    // cleanupGamutCanvas(canvasRef);
 
     if (
         hasValueSlider &&
@@ -82,7 +80,7 @@ export function updateGamutCanvas(
         canvas.style.top = '0';
         // canvas.style.pointerEvents = pointerHandler ? 'auto' : 'none';
         canvas.style.pointerEvents = 'auto';
-        canvas.style.zIndex = '10';
+        canvas.style.zIndex = '100';
         drawTriangle(canvas, colorLightGamut as 'A' | 'B' | 'C', size, fillColor);
         wheelElem.style.position = 'relative';
         wheelElem.appendChild(canvas);
@@ -90,17 +88,38 @@ export function updateGamutCanvas(
 
         const trianglePoints = getGamutTrianglePoints(colorLightGamut as 'A' | 'B' | 'C', size);
 
+        //let lastInside = true;
+        if (lastInsideRef) {
+            lastInsideRef.current = true;
+        }
+
+        wheelElem.addEventListener(
+            'mousemove',
+            e => {
+                if (!lastInsideRef.current) {
+                    // ❌ blockiere iro.js
+                    e.stopImmediatePropagation();
+                    console.log('👉 Original-Handler blockiert, eigener läuft');
+                } else {
+                    // ✅ Original darf laufen
+                    console.log('👉 Original-Handler darf laufen');
+                }
+            },
+            true, // Capture-Phase
+        );
+
         canvas.onpointerdown = (e: PointerEvent) => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             const inside = isPointInTriangle([x, y], trianglePoints);
+
+            if (lastInsideRef && inside !== lastInsideRef.current) {
+                lastInsideRef.current = inside;
+            }
+
             if (pointerHandler) {
                 pointerHandler(e, inside);
-            }
-            if (!inside) {
-                e.preventDefault();
-                e.stopPropagation();
             }
         };
 
@@ -109,12 +128,13 @@ export function updateGamutCanvas(
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             const inside = isPointInTriangle([x, y], trianglePoints);
+
+            if (lastInsideRef && inside !== lastInsideRef.current) {
+                lastInsideRef.current = inside;
+            }
+
             if (pointerHandler) {
                 pointerHandler(e, inside);
-            }
-            if (!inside) {
-                e.preventDefault();
-                e.stopPropagation();
             }
         };
 
@@ -124,16 +144,16 @@ export function updateGamutCanvas(
             const y = e.clientY - rect.top;
             const inside = isPointInTriangle([x, y], trianglePoints);
 
-            console.log('inside:', inside);
+            if (lastInsideRef && inside !== lastInsideRef.current) {
+                lastInsideRef.current = inside;
+
+                console.log('Pointer moved', inside);
+            }
+
             if (pointerHandler) {
                 pointerHandler(e, inside);
             }
-            if (!inside) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
         };
-        // Optional: pointermove, pointerup analog behandeln
     }
 }
 
@@ -141,5 +161,7 @@ export function cleanupGamutCanvas(canvasRef: React.MutableRefObject<HTMLCanvasE
     if (canvasRef.current && canvasRef.current.parentElement) {
         canvasRef.current.parentElement.removeChild(canvasRef.current);
         canvasRef.current = null;
+
+        console.log('Gamut-Canvas entfernt');
     }
 }
