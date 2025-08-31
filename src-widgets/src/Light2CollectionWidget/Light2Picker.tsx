@@ -6,6 +6,7 @@ import { type Light2FieldsRxData } from '../lib/light2Fields';
 import { getColorLightLayout, getColorLightWidth, getMarginBetweenPickers } from './colorPickerUtils/colorPickerMemos';
 import { CollectionContext } from '../components/CollectionProvider';
 import { drawGamutTriangleOnCanvas } from './colorPickerUtils/gamutMath';
+import { useIroEventBlocker } from './colorPickerUtils/useIroEventBlocker';
 
 import {
     initializeColorPicker,
@@ -99,6 +100,14 @@ const Light2Picker: React.FC<LightPickerProps> = ({
         () => colorLightLayout.some(item => item.options?.sliderType === 'value'),
         [colorLightLayout],
     );
+
+    // Event-Blocker für Iro Color Picker aktivieren
+    useIroEventBlocker({
+        targetRef: iroPickerRef,
+        events: ['mousedown', 'mouseup', 'mousemove'],
+        allowRef: lastInsideRef,
+        isWheel: hasValueSlider,
+    });
 
     // Color Picker initialisieren
     useEffect(() => {

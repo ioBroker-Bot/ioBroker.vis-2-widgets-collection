@@ -49,7 +49,7 @@ export function setColorPickerOptions(picker: iro.ColorPicker | null, options: R
 
 export function updateGamutCanvas(
     canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
-    iroPickerRef: React.MutableRefObject<any>,
+    iroPickerRef: React.MutableRefObject<iro.ColorPicker | null>,
     lastInsideRef: React.MutableRefObject<boolean>, // <--- NEU
     hasValueSlider: boolean,
     colorLightGamut: string | undefined,
@@ -67,10 +67,10 @@ export function updateGamutCanvas(
         colorLightGamut !== 'default' &&
         iroPickerRef.current &&
         iroPickerRef.current.base &&
-        iroPickerRef.current.base.children[0] &&
+        (iroPickerRef.current.base as HTMLElement).children[0] &&
         colorLightWidth
     ) {
-        const wheelElem = iroPickerRef.current.base.children[0] as HTMLElement;
+        const wheelElem = (iroPickerRef.current.base as HTMLElement).children[0] as HTMLElement;
         const size = colorLightWidth;
         const canvas = document.createElement('canvas');
         canvas.width = size;
@@ -80,33 +80,13 @@ export function updateGamutCanvas(
         canvas.style.top = '0';
         // canvas.style.pointerEvents = pointerHandler ? 'auto' : 'none';
         canvas.style.pointerEvents = 'auto';
-        canvas.style.zIndex = '100';
+        canvas.style.zIndex = '10';
         drawTriangle(canvas, colorLightGamut as 'A' | 'B' | 'C', size, fillColor);
         wheelElem.style.position = 'relative';
         wheelElem.appendChild(canvas);
         canvasRef.current = canvas;
 
         const trianglePoints = getGamutTrianglePoints(colorLightGamut as 'A' | 'B' | 'C', size);
-
-        //let lastInside = true;
-        if (lastInsideRef) {
-            lastInsideRef.current = true;
-        }
-
-        wheelElem.addEventListener(
-            'mousemove',
-            e => {
-                if (!lastInsideRef.current) {
-                    // ❌ blockiere iro.js
-                    e.stopImmediatePropagation();
-                    console.log('👉 Original-Handler blockiert, eigener läuft');
-                } else {
-                    // ✅ Original darf laufen
-                    console.log('👉 Original-Handler darf laufen');
-                }
-            },
-            true, // Capture-Phase
-        );
 
         canvas.onpointerdown = (e: PointerEvent) => {
             const rect = canvas.getBoundingClientRect();
@@ -146,8 +126,6 @@ export function updateGamutCanvas(
 
             if (lastInsideRef && inside !== lastInsideRef.current) {
                 lastInsideRef.current = inside;
-
-                console.log('Pointer moved', inside);
             }
 
             if (pointerHandler) {
