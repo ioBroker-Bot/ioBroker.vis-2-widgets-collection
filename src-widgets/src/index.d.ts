@@ -41,6 +41,7 @@ export interface CollectionContextProps<T> {
     theme: Theme;
     wrappedContent: boolean;
     getWidgetView: (viewName: string, options?: { style?: React.CSSProperties }) => React.ReactElement;
+    editMode?: boolean;
 }
 
 export type AllCollectionContextProps = CollectionContextProps<

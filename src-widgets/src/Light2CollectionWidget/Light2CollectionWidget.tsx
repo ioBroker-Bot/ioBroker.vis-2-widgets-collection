@@ -99,6 +99,7 @@ class Light2CollectionWidget extends Generic<CommonObjectFieldsRxData & CommonFi
 
     renderWidgetBody(props: RxRenderWidgetProps): React.JSX.Element | React.JSX.Element[] | null {
         super.renderWidgetBody(props);
+        console.log('THIS', this);
 
         const collectionContext = {
             id: props.id,
@@ -121,6 +122,7 @@ class Light2CollectionWidget extends Generic<CommonObjectFieldsRxData & CommonFi
             theme: this.props.context.theme,
 
             wrappedContent: this.wrappedCollectionContent,
+            editMode: this.state.editMode,
         } as Light2CollectionContextProps;
 
         if (props.widget.data.noCard || props.widget.usedInWidget) {

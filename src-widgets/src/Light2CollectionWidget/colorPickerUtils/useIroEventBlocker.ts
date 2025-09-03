@@ -1,10 +1,10 @@
-import type iro from '@jaames/iro';
 import { useEffect } from 'react';
 
 type BlockerHandler = (e: Event) => void;
 
 interface UseIroBlockerOptions {
-    targetRef: React.MutableRefObject<iro.ColorPicker | null>;
+    // targetRef: React.MutableRefObject<iro.ColorPicker | null>;
+    targetRef: React.MutableRefObject<HTMLElement | null>;
     events: string[];
     allowRef: React.MutableRefObject<boolean>;
     isWheel: boolean;
@@ -12,7 +12,7 @@ interface UseIroBlockerOptions {
 
 export function useIroEventBlocker({ targetRef, events, allowRef, isWheel }: UseIroBlockerOptions): void {
     useEffect(() => {
-        const el = (targetRef.current?.base as HTMLElement)?.children[0];
+        const el = targetRef.current as HTMLElement;
         if (!el || !isWheel) {
             return;
         }
@@ -22,7 +22,9 @@ export function useIroEventBlocker({ targetRef, events, allowRef, isWheel }: Use
         events.forEach(evt => {
             const handler: BlockerHandler = e => {
                 if (!allowRef.current) {
-                    e.stopImmediatePropagation();
+                    // e.stopPropagation(); // verhindert Bubbling nach oben
+                    e.stopImmediatePropagation(); // killt alle weiteren Listener an diesem Element
+                    // e.preventDefault();
                     console.log(`🚫 ${evt} blockiert`);
                 } else {
                     console.log(`✅ ${evt} durchgelassen`);

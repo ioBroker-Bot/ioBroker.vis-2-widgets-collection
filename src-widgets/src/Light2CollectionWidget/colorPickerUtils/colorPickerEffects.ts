@@ -48,15 +48,15 @@ export function setColorPickerOptions(picker: iro.ColorPicker | null, options: R
 }
 
 export function updateGamutCanvas(
+    editMode: boolean | undefined,
     canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
     iroPickerRef: React.MutableRefObject<iro.ColorPicker | null>,
-    lastInsideRef: React.MutableRefObject<boolean>, // <--- NEU
     hasValueSlider: boolean,
     colorLightGamut: string | undefined,
     colorLightWidth: number | undefined,
     fillColor: string,
     drawTriangle: typeof drawGamutTriangleOnCanvas,
-    pointerHandler?: (event: PointerEvent, inside: boolean) => void,
+    mouseHandler?: (event: MouseEvent, inside: boolean) => void,
 ): void {
     // Entferne ggf. altes Canvas
     // cleanupGamutCanvas(canvasRef);
@@ -78,9 +78,9 @@ export function updateGamutCanvas(
         canvas.style.position = 'absolute';
         canvas.style.left = '0';
         canvas.style.top = '0';
-        // canvas.style.pointerEvents = pointerHandler ? 'auto' : 'none';
+        // canvas.style.pointerEvents = mouseHandler ? 'auto' : 'none';
         canvas.style.pointerEvents = 'auto';
-        canvas.style.zIndex = '10';
+        canvas.style.zIndex = '1000';
         drawTriangle(canvas, colorLightGamut as 'A' | 'B' | 'C', size, fillColor);
         wheelElem.style.position = 'relative';
         wheelElem.appendChild(canvas);
@@ -88,48 +88,54 @@ export function updateGamutCanvas(
 
         const trianglePoints = getGamutTrianglePoints(colorLightGamut as 'A' | 'B' | 'C', size);
 
-        canvas.onpointerdown = (e: PointerEvent) => {
+        canvas.onmousedown = (e: MouseEvent) => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             const inside = isPointInTriangle([x, y], trianglePoints);
 
-            if (lastInsideRef && inside !== lastInsideRef.current) {
-                lastInsideRef.current = inside;
+            if (!inside && !editMode) {
+                e.stopPropagation(); // verhindert Bubbling nach oben
+                e.stopImmediatePropagation(); // killt alle weiteren Listener an diesem Element
+                e.preventDefault();
             }
 
-            if (pointerHandler) {
-                pointerHandler(e, inside);
+            if (mouseHandler) {
+                mouseHandler(e, inside);
             }
         };
 
-        canvas.onpointerup = (e: PointerEvent) => {
+        canvas.onmouseup = (e: MouseEvent) => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             const inside = isPointInTriangle([x, y], trianglePoints);
 
-            if (lastInsideRef && inside !== lastInsideRef.current) {
-                lastInsideRef.current = inside;
+            if (!inside && !editMode) {
+                e.stopPropagation(); // verhindert Bubbling nach oben
+                e.stopImmediatePropagation(); // killt alle weiteren Listener an diesem Element
+                e.preventDefault();
             }
 
-            if (pointerHandler) {
-                pointerHandler(e, inside);
+            if (mouseHandler) {
+                mouseHandler(e, inside);
             }
         };
 
-        canvas.onpointermove = (e: PointerEvent) => {
+        canvas.onmousemove = (e: MouseEvent) => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             const inside = isPointInTriangle([x, y], trianglePoints);
 
-            if (lastInsideRef && inside !== lastInsideRef.current) {
-                lastInsideRef.current = inside;
+            if (!inside && !editMode) {
+                console.log('move - outside', inside);
+                e.stopPropagation(); // verhindert Bubbling nach oben
+                e.stopImmediatePropagation(); // killt alle weiteren Listener an diesem Element
+                e.preventDefault();
             }
-
-            if (pointerHandler) {
-                pointerHandler(e, inside);
+            if (mouseHandler) {
+                mouseHandler(e, inside);
             }
         };
     }
@@ -139,7 +145,5 @@ export function cleanupGamutCanvas(canvasRef: React.MutableRefObject<HTMLCanvasE
     if (canvasRef.current && canvasRef.current.parentElement) {
         canvasRef.current.parentElement.removeChild(canvasRef.current);
         canvasRef.current = null;
-
-        console.log('Gamut-Canvas entfernt');
     }
 }
