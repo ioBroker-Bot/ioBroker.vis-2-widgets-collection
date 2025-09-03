@@ -47,6 +47,28 @@ export function setColorPickerOptions(picker: iro.ColorPicker | null, options: R
     picker.setOptions(options);
 }
 
+function handlePointerEvent(
+    e: MouseEvent,
+    trianglePoints: [number, number][],
+    editMode: boolean | undefined,
+    mouseHandler?: (event: MouseEvent, inside: boolean) => void,
+): void {
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const inside = isPointInTriangle([x, y], trianglePoints);
+
+    if (!inside && !editMode) {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        e.preventDefault();
+    }
+
+    if (mouseHandler) {
+        mouseHandler(e, inside);
+    }
+}
+
 export function updateGamutCanvas(
     editMode: boolean | undefined,
     canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
@@ -88,56 +110,9 @@ export function updateGamutCanvas(
 
         const trianglePoints = getGamutTrianglePoints(colorLightGamut as 'A' | 'B' | 'C', size);
 
-        canvas.onmousedown = (e: MouseEvent) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const inside = isPointInTriangle([x, y], trianglePoints);
-
-            if (!inside && !editMode) {
-                e.stopPropagation(); // verhindert Bubbling nach oben
-                e.stopImmediatePropagation(); // killt alle weiteren Listener an diesem Element
-                e.preventDefault();
-            }
-
-            if (mouseHandler) {
-                mouseHandler(e, inside);
-            }
-        };
-
-        canvas.onmouseup = (e: MouseEvent) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const inside = isPointInTriangle([x, y], trianglePoints);
-
-            if (!inside && !editMode) {
-                e.stopPropagation(); // verhindert Bubbling nach oben
-                e.stopImmediatePropagation(); // killt alle weiteren Listener an diesem Element
-                e.preventDefault();
-            }
-
-            if (mouseHandler) {
-                mouseHandler(e, inside);
-            }
-        };
-
-        canvas.onmousemove = (e: MouseEvent) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const inside = isPointInTriangle([x, y], trianglePoints);
-
-            if (!inside && !editMode) {
-                console.log('move - outside', inside);
-                e.stopPropagation(); // verhindert Bubbling nach oben
-                e.stopImmediatePropagation(); // killt alle weiteren Listener an diesem Element
-                e.preventDefault();
-            }
-            if (mouseHandler) {
-                mouseHandler(e, inside);
-            }
-        };
+        canvas.onmousedown = (e: MouseEvent) => handlePointerEvent(e, trianglePoints, editMode, mouseHandler);
+        canvas.onmouseup = (e: MouseEvent) => handlePointerEvent(e, trianglePoints, editMode, mouseHandler);
+        canvas.onmousemove = (e: MouseEvent) => handlePointerEvent(e, trianglePoints, editMode, mouseHandler);
     }
 }
 
