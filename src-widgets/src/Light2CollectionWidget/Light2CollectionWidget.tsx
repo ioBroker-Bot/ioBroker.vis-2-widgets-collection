@@ -99,7 +99,6 @@ class Light2CollectionWidget extends Generic<CommonObjectFieldsRxData & CommonFi
 
     renderWidgetBody(props: RxRenderWidgetProps): React.JSX.Element | React.JSX.Element[] | null {
         super.renderWidgetBody(props);
-        console.log('THIS', this);
 
         const collectionContext = {
             id: props.id,

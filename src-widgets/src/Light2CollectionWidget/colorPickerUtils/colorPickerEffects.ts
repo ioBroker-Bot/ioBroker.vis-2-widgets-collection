@@ -73,7 +73,7 @@ export function updateGamutCanvas(
     editMode: boolean | undefined,
     canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
     iroPickerRef: React.MutableRefObject<iro.ColorPicker | null>,
-    hasValueSlider: boolean,
+    hasWheel: boolean,
     colorLightGamut: string | undefined,
     colorLightWidth: number | undefined,
     fillColor: string,
@@ -84,7 +84,7 @@ export function updateGamutCanvas(
     // cleanupGamutCanvas(canvasRef);
 
     if (
-        hasValueSlider &&
+        hasWheel &&
         colorLightGamut &&
         colorLightGamut !== 'default' &&
         iroPickerRef.current &&
@@ -118,6 +118,7 @@ export function updateGamutCanvas(
 
 export function cleanupGamutCanvas(canvasRef: React.MutableRefObject<HTMLCanvasElement | null>): void {
     if (canvasRef.current && canvasRef.current.parentElement) {
+        console.log('Cleaning up gamut canvas');
         canvasRef.current.parentElement.removeChild(canvasRef.current);
         canvasRef.current = null;
     }

@@ -95,9 +95,9 @@ const Light2Picker: React.FC<LightPickerProps> = ({
         [dimensions, colorLightUIComponent, colorLightSliderWidth, colorLightType],
     );
 
-    const hasValueSlider = useMemo(
-        () => colorLightLayout.some(item => item.options?.sliderType === 'value'),
-        [colorLightLayout],
+    const hasWheel = useMemo(
+        () => colorLightUIComponent === 'wheel' && colorLightType !== 'cct',
+        [colorLightUIComponent, colorLightType],
     );
 
     // Event-Blocker für Iro Color Picker aktivieren
@@ -165,7 +165,7 @@ const Light2Picker: React.FC<LightPickerProps> = ({
                 editMode,
                 canvasRef,
                 iroPickerRef,
-                hasValueSlider,
+                hasWheel,
                 colorLightGamut,
                 colorLightWidth,
                 theme.palette.primary.main,
@@ -175,7 +175,7 @@ const Light2Picker: React.FC<LightPickerProps> = ({
         }, 0);
 
         return () => cleanupGamutCanvas(canvasRef);
-    }, [hasValueSlider, colorLightGamut, colorLightWidth, theme.palette.primary.main, onGamutMouseUse, editMode]);
+    }, [hasWheel, colorLightGamut, colorLightWidth, theme.palette.primary.main, onGamutMouseUse, editMode]);
 
     return <Box ref={colorPickerRef} />;
 };
