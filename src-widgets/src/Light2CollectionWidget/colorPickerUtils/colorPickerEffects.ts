@@ -89,6 +89,8 @@ export function updateGamutCanvas(
         (iroPickerRef.current.base as HTMLElement).children[0] &&
         colorLightWidth
     ) {
+        cleanupGamutCanvas(canvasRef);
+
         const wheelElem = (iroPickerRef.current.base as HTMLElement).children[0] as HTMLElement;
         const size = colorLightWidth;
         const canvas = document.createElement('canvas');
@@ -99,7 +101,7 @@ export function updateGamutCanvas(
         canvas.style.top = '0';
         // canvas.style.pointerEvents = mouseHandler ? 'auto' : 'none';
         canvas.style.pointerEvents = 'auto';
-        canvas.style.zIndex = '1000';
+        canvas.style.zIndex = '10';
         drawTriangle(canvas, colorLightGamut as 'A' | 'B' | 'C', size, fillColor);
         wheelElem.style.position = 'relative';
         wheelElem.appendChild(canvas);
