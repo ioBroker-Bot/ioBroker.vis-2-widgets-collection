@@ -80,9 +80,6 @@ export function updateGamutCanvas(
     drawTriangle: typeof drawGamutTriangleOnCanvas,
     mouseHandler?: (event: MouseEvent, inside: boolean) => void,
 ): void {
-    // Entferne ggf. altes Canvas
-    // cleanupGamutCanvas(canvasRef);
-
     if (
         hasWheel &&
         colorLightGamut &&
