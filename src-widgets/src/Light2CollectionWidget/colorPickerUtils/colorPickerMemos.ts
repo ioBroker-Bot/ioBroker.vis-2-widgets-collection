@@ -96,10 +96,9 @@ export function getMarginBetweenPickers(
     colorLightSliderWidth: Light2FieldsRxData['colorLightSliderWidth'],
     colorLightType: Light2FieldsRxData['colorLightType'],
 ): number {
-    console.log('dimensions:', dimensions);
-
     if (colorLightUIComponent !== 'slider' || colorLightType === 'cct') {
         return dimensions.width! - dimensions.maxWidth! - (colorLightSliderWidth || 1) * 28;
     }
+
     return (dimensions.width! - 3 * (colorLightSliderWidth || 1) * 28) / 2;
 }

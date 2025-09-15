@@ -147,7 +147,6 @@ function Light2Collection(): React.ReactElement {
         [dimensions, rxData.colorLightUIComponent, rxData.colorLightSliderWidth, rxData.colorLightType],
     );
 
-    console.log('Light2Collection - marginBetweenPickers:', marginBetweenPickers);
     return (
         <CollectionBase
             isValidType={isValidType}
@@ -159,7 +158,7 @@ function Light2Collection(): React.ReactElement {
                     display: 'flex',
                     flexDirection: 'column',
                     alignSelf: 'stretch',
-                    my: Number(rxData.colorLightPadding) || 0,
+                    mt: 0.5,
                 }}
             >
                 <IconButton>
@@ -199,11 +198,9 @@ function Light2Collection(): React.ReactElement {
             <Divider
                 orientation="vertical"
                 flexItem
-                variant="fullWidth"
-                sx={{
-                    my: Number(rxData.colorLightPadding) || 0,
-                }}
+                variant="middle"
             />
+
             <Box
                 ref={boxRef}
                 sx={{
@@ -218,6 +215,7 @@ function Light2Collection(): React.ReactElement {
                 <LightPicker
                     cctComponentNumber={1} // kelvin
                     dimensions={dimensions}
+                    onInputChange={cctInputChangeHandler}
                     colorLightGamut={rxData.colorLightGamut}
                     colorWheelLightness={rxData.colorWheelLightness}
                     colorLightUIComponent={rxData.colorLightUIComponent}
