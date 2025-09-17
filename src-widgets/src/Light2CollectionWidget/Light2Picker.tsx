@@ -32,6 +32,7 @@ interface LightPickerProps {
     onInputChange?: (color: iro.Color) => void;
     onColorInit?: (color: iro.Color) => void;
     onGamutMouseUse?: (event: MouseEvent, inside: boolean) => void; // <--- NEU
+    color?: iro.Color['hsv']; // <--- NEU: hex-String oder iro.Color
 }
 
 const Light2Picker: React.FC<LightPickerProps> = ({
@@ -49,6 +50,7 @@ const Light2Picker: React.FC<LightPickerProps> = ({
     onInputChange,
     onColorInit,
     onGamutMouseUse, // <--- NEU
+    color, // <--- NEU
 }) => {
     const { theme, editMode } = useContext(CollectionContext);
     const colorPickerRef = useRef<HTMLDivElement>(null);
@@ -129,11 +131,6 @@ const Light2Picker: React.FC<LightPickerProps> = ({
         return () => cleanupColorPicker(iroPickerRef);
     }, []);
 
-    // Color Picker Größe anpassen
-    useEffect(() => {
-        resizeColorPicker(iroPickerRef.current, colorLightWidth);
-    }, [colorLightWidth]);
-
     // Color Picker Optionen setzen
     useEffect(() => {
         setColorPickerOptions(iroPickerRef.current, {
@@ -157,6 +154,19 @@ const Light2Picker: React.FC<LightPickerProps> = ({
         colorLightBorderColor,
         colorWheelLightness,
     ]);
+
+    // Color Picker Größe anpassen
+    useEffect(() => {
+        resizeColorPicker(iroPickerRef.current, colorLightWidth);
+    }, [colorLightWidth]);
+
+    // NEU: Picker-Farbe aktualisieren, wenn Prop 'color' sich ändert
+    useEffect(() => {
+        if (color && iroPickerRef.current) {
+            iroPickerRef.current.color.hue = color.h!;
+            iroPickerRef.current.color.saturation = color.s!;
+        }
+    }, [color]);
 
     // Canvas direkt in das Wheel-Element einfügen/entfernen
     useEffect(() => {

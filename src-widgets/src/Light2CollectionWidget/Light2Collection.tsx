@@ -1,6 +1,6 @@
 import { Box, Divider, IconButton, SvgIcon } from '@mui/material';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
-import { useContext, useMemo, useRef } from 'react';
+import { useContext, useMemo, useRef, useState } from 'react';
 import CollectionBase from '../components/CollectionBase';
 import { CollectionContext } from '../components/CollectionProvider';
 import useData from '../hooks/useData';
@@ -111,6 +111,9 @@ const CctWhiteIcon: React.FC<React.ComponentProps<typeof SvgIcon>> = props => (
 );
 
 function Light2Collection(): React.ReactElement {
+    // State für die Kelvin-Farbe
+    const [kelvinColor, setKelvinColor] = useState<iro.Color['hsv'] | null>(null);
+
     const context = useContext(CollectionContext);
     const {
         widget,
@@ -134,6 +137,13 @@ function Light2Collection(): React.ReactElement {
 
     const cctInputChangeHandler = (color: iro.Color): void => {
         console.log('cctInputChange - color:', color);
+    };
+
+    // Handler für Kelvin-Slider
+    const kelvinInputChangeHandler = (color: iro.Color): void => {
+        // console.log('kelvinInputChange - color:', color);
+        setKelvinColor(color.hsv);
+        // Optional: weitere Logik
     };
 
     const marginBetweenPickers = useMemo(
@@ -215,7 +225,7 @@ function Light2Collection(): React.ReactElement {
                 <LightPicker
                     cctComponentNumber={1} // kelvin
                     dimensions={dimensions}
-                    onInputChange={cctInputChangeHandler}
+                    onInputChange={kelvinInputChangeHandler}
                     colorLightGamut={rxData.colorLightGamut}
                     colorWheelLightness={rxData.colorWheelLightness}
                     colorLightUIComponent={rxData.colorLightUIComponent}
@@ -243,6 +253,8 @@ function Light2Collection(): React.ReactElement {
                             colorLightType={rxData.colorLightType}
                             colorLightCtMin={rxData.colorLightCtMin}
                             colorLightCtMax={rxData.colorLightCtMax}
+                            // NEU: Kelvin-Farbe als Prop übergeben
+                            color={kelvinColor ? kelvinColor : undefined}
                         />
                     </Box>
                 ) : null}
