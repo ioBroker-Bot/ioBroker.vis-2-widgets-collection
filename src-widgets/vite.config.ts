@@ -1,3 +1,5 @@
+import path from 'path';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
 import commonjs from 'vite-plugin-commonjs';
@@ -5,9 +7,10 @@ import vitetsConfigPaths from 'vite-tsconfig-paths';
 import { federation } from '@module-federation/vite';
 import { moduleFederationShared } from '@iobroker/types-vis-2/modulefederation.vis.config';
 import { readFileSync } from 'node:fs';
+
 const pack = JSON.parse(readFileSync('./package.json').toString());
 
-const config = {
+export default defineConfig({
     plugins: [
         federation({
             manifest: true,
@@ -32,7 +35,7 @@ const config = {
         }),
         react(),
         svgr({
-            include: ['**/*.svg?react'], // Include SVG files for SVGR processing
+            include: ['**/*.svg?react'],
         }),
         vitetsConfigPaths(),
         commonjs(),
@@ -56,8 +59,7 @@ const config = {
         target: 'chrome89',
         outDir: './build',
         rollupOptions: {
-            onwarn(warning: { code: string }, warn: (warning: { code: string }) => void): void {
-                // Suppress "Module level directives cause errors when bundled" warnings
+            onwarn(warning, warn) {
                 if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
                     return;
                 }
@@ -65,6 +67,4 @@ const config = {
             },
         },
     },
-};
-
-export default config;
+});

@@ -1,6 +1,5 @@
 // colorPickerUtils/colorPickerEffects.ts
 import iro from '@jaames/iro';
-import { getGamutTrianglePoints, isPointInTriangle, type drawGamutTriangleOnCanvas } from './gamutMath';
 
 export function initializeColorPicker(
     ref: React.RefObject<HTMLDivElement>,
@@ -45,80 +44,4 @@ export function setColorPickerOptions(picker: iro.ColorPicker | null, options: R
         return;
     }
     picker.setOptions(options);
-}
-
-function handlePointerEvent(
-    e: MouseEvent,
-    trianglePoints: [number, number][],
-    editMode: boolean | undefined,
-    mouseHandler?: (event: MouseEvent, inside: boolean) => void,
-): void {
-    const rect = (e.target as HTMLElement).getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const inside = isPointInTriangle([x, y], trianglePoints);
-
-    if (!inside && !editMode) {
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        e.preventDefault();
-    }
-
-    if (mouseHandler) {
-        mouseHandler(e, inside);
-    }
-}
-
-export function updateGamutCanvas(
-    editMode: boolean | undefined,
-    canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
-    iroPickerRef: React.MutableRefObject<iro.ColorPicker | null>,
-    hasWheel: boolean,
-    colorLightGamut: string | undefined,
-    colorLightWidth: number | undefined,
-    fillColor: string,
-    drawTriangle: typeof drawGamutTriangleOnCanvas,
-    mouseHandler?: (event: MouseEvent, inside: boolean) => void,
-): void {
-    if (
-        hasWheel &&
-        colorLightGamut &&
-        colorLightGamut !== 'default' &&
-        iroPickerRef.current &&
-        iroPickerRef.current.base &&
-        (iroPickerRef.current.base as HTMLElement).children[0] &&
-        colorLightWidth
-    ) {
-        cleanupGamutCanvas(canvasRef);
-
-        const wheelElem = (iroPickerRef.current.base as HTMLElement).children[0] as HTMLElement;
-        const size = colorLightWidth;
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        canvas.style.position = 'absolute';
-        canvas.style.left = '0';
-        canvas.style.top = '0';
-        // canvas.style.pointerEvents = mouseHandler ? 'auto' : 'none';
-        canvas.style.pointerEvents = 'auto';
-        canvas.style.zIndex = '10';
-        drawTriangle(canvas, colorLightGamut as 'A' | 'B' | 'C', size, fillColor);
-        wheelElem.style.position = 'relative';
-        wheelElem.appendChild(canvas);
-        canvasRef.current = canvas;
-
-        const trianglePoints = getGamutTrianglePoints(colorLightGamut as 'A' | 'B' | 'C', size);
-
-        canvas.onmousedown = (e: MouseEvent) => handlePointerEvent(e, trianglePoints, editMode, mouseHandler);
-        canvas.onmouseup = (e: MouseEvent) => handlePointerEvent(e, trianglePoints, editMode, mouseHandler);
-        canvas.onmousemove = (e: MouseEvent) => handlePointerEvent(e, trianglePoints, editMode, mouseHandler);
-    }
-}
-
-export function cleanupGamutCanvas(canvasRef: React.MutableRefObject<HTMLCanvasElement | null>): void {
-    if (canvasRef.current && canvasRef.current.parentElement) {
-        console.log('Cleaning up gamut canvas');
-        canvasRef.current.parentElement.removeChild(canvasRef.current);
-        canvasRef.current = null;
-    }
 }

@@ -10,6 +10,7 @@ import LightPicker from './Light2Picker';
 import type iro from '@jaames/iro';
 import ColorWheelSvg from '../img/colorWheel.svg?react';
 import { getMarginBetweenPickers } from './colorPickerUtils/colorPickerMemos';
+import useValueState from '../hooks/useValueState';
 
 const ColorWheelIcon: React.FC<React.ComponentProps<typeof SvgIcon>> = props => (
     <SvgIcon
@@ -111,6 +112,42 @@ const CctWhiteIcon: React.FC<React.ComponentProps<typeof SvgIcon>> = props => (
 );
 
 function Light2Collection(): React.ReactElement {
+    console.log('Light2Collection rendered');
+    function getInitialColor({
+        rgbHexValue,
+        redValue,
+        greenValue,
+        blueValue,
+        hueValue,
+        saturationValue,
+        brightnessValue,
+    }: {
+        rgbHexValue?: string;
+        redValue?: number;
+        greenValue?: number;
+        blueValue?: number;
+        hueValue?: number;
+        saturationValue?: number;
+        brightnessValue?: number;
+    }): string | iro.Color['hsv'] | iro.Color['rgb'] | undefined {
+        if (rgbHexValue) {
+            return rgbHexValue;
+        }
+        if (typeof redValue === 'number' && typeof greenValue === 'number' && typeof blueValue === 'number') {
+            // iro.js akzeptiert {r,g,b}
+            return { r: redValue, g: greenValue, b: blueValue };
+        }
+        if (
+            typeof hueValue === 'number' &&
+            typeof saturationValue === 'number' &&
+            typeof brightnessValue === 'number'
+        ) {
+            // iro.js akzeptiert {h,s,v}
+            return { h: hueValue, s: saturationValue, v: brightnessValue };
+        }
+        return undefined;
+    }
+
     // State für die Kelvin-Farbe
     const [kelvinColor, setKelvinColor] = useState<iro.Color['hsv'] | null>(null);
 
@@ -131,20 +168,56 @@ function Light2Collection(): React.ReactElement {
     const oidType = colorLightSwitchOidObject?.type;
     const isValidType = oidType === 'boolean';
 
-    const initHandler = (color: iro.Color): void => {
-        console.log('init - color:', color);
-    };
+    // ON/OFF
+    const { value: onOffValue, updateValue: setOnOffValueState } = useValueState('colorLightSwitchOid');
 
-    const cctInputChangeHandler = (color: iro.Color): void => {
-        console.log('cctInputChange - color:', color);
-    };
+    // Temperature
+    /* const {
+        value: temperatureValue,
+        hasValueChanged: temperatureChanged,
+        updateValue: setTemperatureValueState,
+    } = useValueState('colorLightTemperatureOid'); */
 
-    // Handler für Kelvin-Slider
-    const kelvinInputChangeHandler = (color: iro.Color): void => {
-        // console.log('kelvinInputChange - color:', color);
-        setKelvinColor(color.hsv);
-        // Optional: weitere Logik
-    };
+    // RGB
+    /* const {
+        value: rgbHexValue,
+        hasValueChanged: rgbHexChanged,
+        updateValue: setRgbHexValueState,
+    } = useValueState('colorLightRgbHexOid'); */
+
+    // R/G/B
+    /* const {
+        value: redValue,
+        hasValueChanged: redChanged,
+        updateValue: setRedValueState,
+    } = useValueState('colorLightRedOid');
+    const {
+        value: greenValue,
+        hasValueChanged: greenChanged,
+        updateValue: setGreenValueState,
+    } = useValueState('colorLightGreenOid');
+    const {
+        value: blueValue,
+        hasValueChanged: blueChanged,
+        updateValue: setBlueValueState,
+    } = useValueState('colorLightBlueOid'); */
+
+    // H/S/V
+    /* const {
+        value: hueValue,
+        hasValueChanged: hueChanged,
+        updateValue: setHueValueState,
+    } = useValueState('colorLightHueOid');
+    const {
+        value: saturationValue,
+        hasValueChanged: saturationChanged,
+        updateValue: setSaturationValueState,
+    } = useValueState('colorLightSaturationOid');
+    const {
+        value: brightnessValue,
+        hasValueChanged: brightnessChanged,
+        updateValue: setBrightnessValueState,
+    } = useValueState('colorLightBrightnessOid'); */
 
     const marginBetweenPickers = useMemo(
         () =>
@@ -156,6 +229,22 @@ function Light2Collection(): React.ReactElement {
             ),
         [dimensions, rxData.colorLightUIComponent, rxData.colorLightSliderWidth, rxData.colorLightType],
     );
+
+    const initHandler = (color: iro.Color): void => {
+        console.log('init - color:', color);
+    };
+
+    const cctInputChangeHandler = (color: iro.Color): void => {
+        console.log('cctInputChange - color:', color);
+        console.log('gamut', color.getGamut());
+    };
+
+    // Handler für Kelvin-Slider
+    const kelvinInputChangeHandler = (color: iro.Color): void => {
+        console.log('kelvinInputChange - color:', color);
+        setKelvinColor(color.hsv);
+        // Optional: weitere Logik
+    };
 
     return (
         <CollectionBase
@@ -171,10 +260,18 @@ function Light2Collection(): React.ReactElement {
                     mt: 0.5,
                 }}
             >
-                <IconButton>
+                <IconButton
+                    onClick={() => {
+                        if (onOffValue) {
+                            setOnOffValueState(false);
+                        } else {
+                            setOnOffValueState(true);
+                        }
+                    }}
+                >
                     <PowerSettingsNewIcon
                         sx={{
-                            // color: onOffValue ? 'red' : 'green',
+                            color: onOffValue ? 'red' : 'green',
                             width: '1.1em',
                             height: '1.1em',
                         }}
@@ -225,7 +322,9 @@ function Light2Collection(): React.ReactElement {
                 <LightPicker
                     cctComponentNumber={1} // kelvin
                     dimensions={dimensions}
-                    onInputChange={kelvinInputChangeHandler}
+                    marginBetweenPickers={marginBetweenPickers}
+                    onInputChange={cctInputChangeHandler}
+                    onColorInit={initHandler}
                     colorLightGamut={rxData.colorLightGamut}
                     colorWheelLightness={rxData.colorWheelLightness}
                     colorLightUIComponent={rxData.colorLightUIComponent}
@@ -235,6 +334,15 @@ function Light2Collection(): React.ReactElement {
                     colorLightType={rxData.colorLightType}
                     colorLightCtMin={rxData.colorLightCtMin}
                     colorLightCtMax={rxData.colorLightCtMax}
+                    /* color={getInitialColor({
+                        rgbHexValue,
+                        redValue,
+                        greenValue,
+                        blueValue,
+                        hueValue,
+                        saturationValue,
+                        brightnessValue,
+                    })} */
                 />
 
                 {rxData.colorLightType === 'cct' ? (
@@ -244,6 +352,7 @@ function Light2Collection(): React.ReactElement {
                             onColorInit={initHandler}
                             onInputChange={cctInputChangeHandler}
                             dimensions={dimensions}
+                            marginBetweenPickers={marginBetweenPickers}
                             colorLightGamut={rxData.colorLightGamut}
                             colorWheelLightness={rxData.colorWheelLightness}
                             colorLightUIComponent={rxData.colorLightUIComponent}

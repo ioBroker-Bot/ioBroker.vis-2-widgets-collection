@@ -3,9 +3,8 @@ import type iro from '@jaames/iro';
 import { Box } from '@mui/material';
 import { type ElementDimensions } from '../hooks/useElementDimensions';
 import { type Light2FieldsRxData } from '../lib/light2Fields';
-import { getColorLightLayout, getColorLightWidth, getMarginBetweenPickers } from './colorPickerUtils/colorPickerMemos';
+import { getColorLightLayout, getColorLightWidth } from './colorPickerUtils/colorPickerMemos';
 import { CollectionContext } from '../components/CollectionProvider';
-import { drawGamutTriangleOnCanvas } from './colorPickerUtils/gamutMath';
 // import { useIroEventBlocker } from './colorPickerUtils/useIroEventBlocker';
 
 import {
@@ -13,12 +12,11 @@ import {
     cleanupColorPicker,
     resizeColorPicker,
     setColorPickerOptions,
-    updateGamutCanvas,
-    cleanupGamutCanvas,
 } from './colorPickerUtils/colorPickerEffects';
 
 interface LightPickerProps {
     dimensions: ElementDimensions;
+    marginBetweenPickers: number;
     colorLightUIComponent: Light2FieldsRxData['colorLightUIComponent'];
     colorLightSliderWidth: Light2FieldsRxData['colorLightSliderWidth'];
     colorLightBorderWidth: Light2FieldsRxData['colorLightBorderWidth'];
@@ -31,12 +29,12 @@ interface LightPickerProps {
     cctComponentNumber: number;
     onInputChange?: (color: iro.Color) => void;
     onColorInit?: (color: iro.Color) => void;
-    onGamutMouseUse?: (event: MouseEvent, inside: boolean) => void; // <--- NEU
     color?: iro.Color['hsv']; // <--- NEU: hex-String oder iro.Color
 }
 
 const Light2Picker: React.FC<LightPickerProps> = ({
     dimensions,
+    marginBetweenPickers,
     colorLightUIComponent,
     colorLightSliderWidth,
     colorLightBorderWidth,
@@ -49,13 +47,12 @@ const Light2Picker: React.FC<LightPickerProps> = ({
     cctComponentNumber,
     onInputChange,
     onColorInit,
-    onGamutMouseUse, // <--- NEU
-    color, // <--- NEU
+    color,
 }) => {
-    const { theme, editMode } = useContext(CollectionContext);
+    // console.log('COLOR:', color);
+    const { theme } = useContext(CollectionContext);
     const colorPickerRef = useRef<HTMLDivElement>(null);
     const iroPickerRef = useRef<iro.ColorPicker | null>(null);
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     const handleColorInit = useCallback(
         (color: iro.Color) => {
@@ -73,7 +70,7 @@ const Light2Picker: React.FC<LightPickerProps> = ({
         [onInputChange],
     );
     const onInputChangeRef = useRef(handleInputChange);
-    onInputChangeRef.current = handleInputChange;
+    // onInputChangeRef.current = handleInputChange;
 
     const colorLightLayout = useMemo(
         () =>
@@ -92,24 +89,6 @@ const Light2Picker: React.FC<LightPickerProps> = ({
         [dimensions, colorLightUIComponent, colorLightType],
     );
 
-    const marginBetweenPickers = useMemo(
-        () => getMarginBetweenPickers(dimensions, colorLightUIComponent, colorLightSliderWidth, colorLightType),
-        [dimensions, colorLightUIComponent, colorLightSliderWidth, colorLightType],
-    );
-
-    const hasWheel = useMemo(
-        () => colorLightUIComponent === 'wheel' && colorLightType !== 'cct',
-        [colorLightUIComponent, colorLightType],
-    );
-
-    // Event-Blocker für Iro Color Picker aktivieren
-    /* useIroEventBlocker({
-        targetRef: boxRef,
-        events: ['mousedown', 'mouseup', 'mousemove'],
-        allowRef: lastInsideRef,
-        isWheel: hasValueSlider,
-    }); */
-
     // Color Picker initialisieren
     useEffect(() => {
         initializeColorPicker(
@@ -117,6 +96,9 @@ const Light2Picker: React.FC<LightPickerProps> = ({
             iroPickerRef,
             {
                 // color: '#ffffff',
+                gamut: colorLightGamut,
+                wheelDirection: 'clockwise',
+                wheelAngle: 35,
                 width: 0,
                 margin: 12,
                 sliderSize: 28,
@@ -129,12 +111,13 @@ const Light2Picker: React.FC<LightPickerProps> = ({
             color => onColorInitRef.current(color),
         );
         return () => cleanupColorPicker(iroPickerRef);
-    }, []);
+    }, [colorLightGamut]);
 
     // Color Picker Optionen setzen
     useEffect(() => {
         setColorPickerOptions(iroPickerRef.current, {
             layout: colorLightLayout,
+            gamut: colorLightGamut,
             margin: marginBetweenPickers,
             wheelLightness: colorWheelLightness,
             sliderSize: (colorLightSliderWidth || 1) * 28,
@@ -151,6 +134,7 @@ const Light2Picker: React.FC<LightPickerProps> = ({
         marginBetweenPickers,
         colorLightSliderWidth,
         colorLightBorderWidth,
+        colorLightGamut,
         colorLightBorderColor,
         colorWheelLightness,
     ]);
@@ -163,29 +147,12 @@ const Light2Picker: React.FC<LightPickerProps> = ({
     // NEU: Picker-Farbe aktualisieren, wenn Prop 'color' sich ändert
     useEffect(() => {
         if (color && iroPickerRef.current) {
-            iroPickerRef.current.color.hue = color.h!;
-            iroPickerRef.current.color.saturation = color.s!;
+            // iroPickerRef.current.color.hue = color.h!;
+            // iroPickerRef.current.color.saturation = color.s!;
+            // console.log('SET COLOR:', color);
+            // iroPickerRef.current.color.rgb = color;
         }
     }, [color]);
-
-    // Canvas direkt in das Wheel-Element einfügen/entfernen
-    useEffect(() => {
-        setTimeout(() => {
-            updateGamutCanvas(
-                editMode,
-                canvasRef,
-                iroPickerRef,
-                hasWheel,
-                colorLightGamut,
-                colorLightWidth,
-                theme.palette.primary.main,
-                drawGamutTriangleOnCanvas,
-                onGamutMouseUse, // <--- NEU
-            );
-        }, 0);
-
-        return () => cleanupGamutCanvas(canvasRef);
-    }, [hasWheel, colorLightGamut, colorLightWidth, theme.palette.primary.main, onGamutMouseUse, editMode]);
 
     return <Box ref={colorPickerRef} />;
 };
