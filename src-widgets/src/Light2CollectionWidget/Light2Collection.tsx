@@ -236,7 +236,7 @@ function Light2Collection(): React.ReactElement {
 
     const cctInputChangeHandler = (color: iro.Color): void => {
         console.log('cctInputChange - color:', color);
-        console.log('gamut', color.getGamut());
+        console.log('gamut', color.gamutType);
     };
 
     // Handler für Kelvin-Slider

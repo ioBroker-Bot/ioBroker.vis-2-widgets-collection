@@ -111,7 +111,8 @@ const Light2Picker: React.FC<LightPickerProps> = ({
             color => onColorInitRef.current(color),
         );
         return () => cleanupColorPicker(iroPickerRef);
-    }, [colorLightGamut]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Color Picker Optionen setzen
     useEffect(() => {

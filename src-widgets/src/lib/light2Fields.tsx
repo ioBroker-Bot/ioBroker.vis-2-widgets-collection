@@ -30,7 +30,7 @@ export interface Light2FieldsRxData {
     colorLightHueOid?: string;
     colorLightSaturationOid?: string;
     colorLightBrightnessOid?: string;
-    colorLightGamut?: 'default' | 'A' | 'B' | 'C';
+    colorLightGamut?: 'none' | 'A' | 'B' | 'C';
 }
 
 // Extended WidgetData interface to include icon properties and value configurations
@@ -149,12 +149,12 @@ const light2Fields = (): RxWidgetInfoAttributesField[] => [
         type: 'select',
         label: 'color_light_gamut',
         options: [
-            { value: 'default', label: 'default' },
+            { value: 'none', label: 'default' },
             { value: 'A', label: 'A' },
             { value: 'B', label: 'B' },
             { value: 'C', label: 'C' },
         ],
-        default: 'default',
+        default: 'none',
         noTranslation: true,
     },
     {
