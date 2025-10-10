@@ -97,8 +97,9 @@ const Light2Picker: React.FC<LightPickerProps> = ({
             {
                 // color: '#ffffff',
                 gamut: colorLightGamut,
-                wheelDirection: 'clockwise',
-                wheelAngle: 35,
+                // wheelDirection: 'clockwise',
+                wheelAngle: 34,
+                // matrixProfile: 'srgb_d65', // Native sRGB für beste Präzision
                 width: 0,
                 margin: 12,
                 sliderSize: 28,
@@ -116,6 +117,9 @@ const Light2Picker: React.FC<LightPickerProps> = ({
 
     // Color Picker Optionen setzen
     useEffect(() => {
+        if (iroPickerRef.current) {
+            console.log('colorLightLayout:', colorLightLayout);
+        }
         setColorPickerOptions(iroPickerRef.current, {
             layout: colorLightLayout,
             gamut: colorLightGamut,
@@ -154,6 +158,8 @@ const Light2Picker: React.FC<LightPickerProps> = ({
             // iroPickerRef.current.color.rgb = color;
         }
     }, [color]);
+
+    console.log('iroPickerRef:', iroPickerRef.current);
 
     return <Box ref={colorPickerRef} />;
 };

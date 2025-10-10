@@ -1,5 +1,6 @@
 // colorPickerUtils/colorPickerEffects.ts
 import iro from '@jaames/iro';
+import { type GamutType } from '../../../../../iro-core/dist';
 
 export function initializeColorPicker(
     ref: React.RefObject<HTMLDivElement>,
@@ -25,6 +26,9 @@ export function initializeColorPicker(
         if (onInputChange) {
             onInputChange(color);
         }
+    });
+    pickerRef.current.on('gamut:change', (gamut: GamutType) => {
+        console.log('Gamut changed to:', gamut);
     });
 }
 
