@@ -99,7 +99,40 @@ const Light2Picker: React.FC<LightPickerProps> = ({
                 gamut: colorLightGamut,
                 // wheelDirection: 'clockwise',
                 wheelAngle: 34,
-                // matrixProfile: 'srgb_d65', // Native sRGB für beste Präzision
+                // matrixProfile: 'srgb_d65', // Matrix profile selection for RGB↔XYZ color space transformations
+                //
+                // IMPORTANT: Choose the appropriate matrix profile based on your use case:
+                //
+                // Option 1: 'srgb_d65' (Native sRGB D65 - Recommended for web/display applications)
+                //   - Uses standard D65 white point (0.3127, 0.3290) - daylight illuminant
+                //   - Matches CSS color specifications and browser rendering
+                //   - Best for typical web applications WITHOUT smart lighting integration
+                //   - Ensures color accuracy with standard sRGB workflows
+                //   - Use when: Building standard ioBroker visualizations for displays
+                //
+                // Option 2: 'nodehue_d50_typo' (DEFAULT - Philips Hue Compatible)
+                //   - Uses D50 white point (0.3457, 0.3585) - ICC Profile Connection Space
+                //   - Matches node-hue-api library and Philips Hue ecosystem
+                //   - Includes historical typo for backward compatibility with Hue systems
+                //   - Best for Philips Hue smart bulb integration
+                //   - Use when: Controlling Hue lights or need compatibility with existing Hue installations
+                //
+                // Option 3: 'icc_d50_corrected' (Corrected D50 - Professional color management)
+                //   - Uses D50 white point with mathematically correct ICC matrices
+                //   - Best for professional color management workflows
+                //   - Use when: Accuracy matters more than Hue compatibility
+                //
+                // The matrix profile affects:
+                //   - xy chromaticity coordinates (used by smart lighting APIs)
+                //   - Gamut clamping behavior (white point used as radial projection anchor)
+                //   - Does NOT affect RGB, HSV, or HSL color operations
+                //
+                // For ioBroker visualization widgets displaying colors on screens:
+                //   → Uncomment and use 'srgb_d65' for best web/display color accuracy
+                //
+                // For ioBroker widgets controlling Philips Hue lights:
+                //   → Keep default (omit matrixProfile) or explicitly set 'nodehue_d50_typo'
+                //
                 width: 0,
                 margin: 12,
                 sliderSize: 28,
