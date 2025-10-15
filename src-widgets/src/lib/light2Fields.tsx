@@ -17,7 +17,7 @@ export interface Light2FieldsRxData {
     colorLightBorderColor?: string;
     colorLightPadding?: number;
     colorLightSwitchOid?: string;
-    colorLightUIComponent?: 'wheel' | 'box' | 'slider';
+    colorLightUIComponent?: 'wheel' | 'gamutWheel' | 'box' | 'slider';
     colorWheelLightness?: boolean;
     colorLightType?: 'none' | 'cct' | 'rgb' | 'rgbcct' | 'r/g/b' | 'r/g/b/cct' | 'h/s/v' | 'h/s/v/cct';
     colorLightTemperatureOid?: string;
@@ -156,6 +156,18 @@ const light2Fields = (): RxWidgetInfoAttributesField[] => [
         ],
         default: 'none',
         noTranslation: true,
+        onChange: (_field, data, changeData) => {
+            const rxData = data as Partial<Light2FieldsRxData>;
+
+            // If gamut changed to 'none' and gamutWheel is selected, reset to wheel
+            if (rxData.colorLightGamut === 'none' && rxData.colorLightUIComponent === 'gamutWheel') {
+                changeData({
+                    ...data,
+                    colorLightUIComponent: 'wheel',
+                });
+            }
+            return Promise.resolve();
+        },
     },
     {
         type: 'custom',
@@ -251,7 +263,8 @@ const light2Fields = (): RxWidgetInfoAttributesField[] => [
         type: 'select',
         label: 'color_light_ui_component',
         options: [
-            { value: 'wheel', label: 'Wheel' },
+            { value: 'wheel', label: 'Wheel (HSV)' },
+            { value: 'gamutWheel', label: 'Gamut Wheel (Perceptual)' },
             { value: 'box', label: 'Box' },
             { value: 'slider', label: 'Slider' },
         ],
@@ -260,16 +273,35 @@ const light2Fields = (): RxWidgetInfoAttributesField[] => [
         hidden: (data: WidgetData) =>
             (data as Partial<Light2FieldsRxData>).colorLightType === 'cct' ||
             (data as Partial<Light2FieldsRxData>).colorLightType === 'none',
+        onChange: (_field, data, changeData) => {
+            const rxData = data as Partial<Light2FieldsRxData>;
+
+            // If gamutWheel selected but no valid gamut, reset to wheel
+            if (
+                rxData.colorLightUIComponent === 'gamutWheel' &&
+                (!rxData.colorLightGamut || rxData.colorLightGamut === 'none')
+            ) {
+                changeData({
+                    ...data,
+                    colorLightUIComponent: 'wheel',
+                });
+            }
+            return Promise.resolve();
+        },
     },
     {
         name: 'colorWheelLightness',
         label: 'color_wheel_lightness',
         type: 'checkbox',
         default: false,
-        hidden: (data: WidgetData) =>
-            (data as Partial<Light2FieldsRxData>).colorLightType === 'none' ||
-            (data as Partial<Light2FieldsRxData>).colorLightType === 'cct' ||
-            (data as Partial<Light2FieldsRxData>).colorLightUIComponent !== 'wheel',
+        hidden: (data: WidgetData) => {
+            const rxData = data as Partial<Light2FieldsRxData>;
+            return (
+                rxData.colorLightType === 'none' ||
+                rxData.colorLightType === 'cct' ||
+                !['wheel', 'gamutWheel'].includes(rxData.colorLightUIComponent || '')
+            );
+        },
     },
     {
         type: 'custom',

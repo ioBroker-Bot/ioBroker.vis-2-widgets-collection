@@ -3,8 +3,12 @@ import { type ElementDimensions } from '../../hooks/useElementDimensions';
 import { type Light2FieldsRxData } from '../../lib/light2Fields';
 
 type IroLayout = Array<{
-    component: typeof iro.ui.Wheel | typeof iro.ui.Box | typeof iro.ui.Slider;
-    options?: Record<string, any>;
+    component:
+        | typeof iro.ui.Wheel
+        | typeof iro.ui.GamutWheel // eslint-disable-line @typescript-eslint/no-redundant-type-constituents
+        | typeof iro.ui.Box
+        | typeof iro.ui.Slider;
+    options?: Record<string, unknown>;
 }>;
 
 // Gibt das Layout für den ColorPicker zurück
@@ -14,7 +18,13 @@ export function getColorLightLayout(
     colorLightType: Light2FieldsRxData['colorLightType'],
     colorLightCtMin: Light2FieldsRxData['colorLightCtMin'],
     colorLightCtMax: Light2FieldsRxData['colorLightCtMax'],
+    colorLightGamut: Light2FieldsRxData['colorLightGamut'],
 ): IroLayout {
+    // Runtime guard: fallback gamutWheel to wheel if gamut is 'none'
+    if (colorLightUIComponent === 'gamutWheel' && (!colorLightGamut || colorLightGamut === 'none')) {
+        colorLightUIComponent = 'wheel';
+    }
+
     if (colorLightType === 'cct') {
         const cctLayout = [
             {
@@ -39,6 +49,17 @@ export function getColorLightLayout(
             return [
                 {
                     component: iro.ui.Wheel,
+                    options: {},
+                },
+                {
+                    component: iro.ui.Slider,
+                    options: { sliderType: 'value' },
+                },
+            ];
+        case 'gamutWheel':
+            return [
+                {
+                    component: iro.ui.GamutWheel,
                     options: {},
                 },
                 {
@@ -80,6 +101,7 @@ export function getColorLightWidth(
 
     switch (colorLightUIComponent) {
         case 'wheel':
+        case 'gamutWheel':
         case 'box':
             return dimensions.maxWidth;
         case 'slider':
@@ -96,7 +118,7 @@ export function getMarginBetweenPickers(
     colorLightSliderWidth: Light2FieldsRxData['colorLightSliderWidth'],
     colorLightType: Light2FieldsRxData['colorLightType'],
 ): number {
-    if (colorLightUIComponent !== 'slider' || colorLightType === 'cct') {
+    if (['wheel', 'gamutWheel', 'box'].includes(colorLightUIComponent || '') || colorLightType === 'cct') {
         return dimensions.width! - dimensions.maxWidth! - ((colorLightSliderWidth || 1) * 28 + 2);
     }
 

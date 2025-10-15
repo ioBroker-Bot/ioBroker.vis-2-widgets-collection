@@ -80,8 +80,9 @@ const Light2Picker: React.FC<LightPickerProps> = ({
                 colorLightType,
                 colorLightCtMin,
                 colorLightCtMax,
+                colorLightGamut,
             ),
-        [cctComponentNumber, colorLightUIComponent, colorLightType, colorLightCtMin, colorLightCtMax],
+        [cctComponentNumber, colorLightUIComponent, colorLightType, colorLightCtMin, colorLightCtMax, colorLightGamut],
     );
 
     const colorLightWidth = useMemo(
